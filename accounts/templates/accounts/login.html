@@ -1,0 +1,38 @@
+<!-- accounts/templates/accounts/login.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FSA AttachTrack — Login{% endblock %}
+
+{% block content %}
+<div style="max-width:400px;margin:40px auto;">
+    <div class="card">
+        <div class="card-header">🔐 Login</div>
+        <div style="padding:30px;">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Username or email</label>
+                    <input type="text" name="username" class="form-control" placeholder="username or email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                {% if form.errors %}
+                <div style="color:var(--red);font-size:12px;margin-top:10px;">
+                    Invalid username or password.
+                </div>
+                {% endif %}
+                <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0;">
+                    <a href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+                    <a href="{% url 'accounts:register' %}">Create account</a>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

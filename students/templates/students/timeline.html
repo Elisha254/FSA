@@ -1,0 +1,70 @@
+<!-- templates/students/timeline.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FSA AttachTrack — Timeline{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Status & Timeline Tracker</h2>
+    <p>Monitor durations and days remaining — 🔴 Ended &nbsp;🟠 ≤14 days</p>
+</div>
+
+<div class="table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Full Name</th>
+                <th>Department</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Duration</th>
+                <th>Days Remaining</th>
+                <th>Status</th>
+                <th style="text-align:center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr onclick="window.location.href='{% url 'students:detail' student.id %}'">
+                <td>{{ forloop.counter }}</td>
+                <td class="name-cell">{{ student.name }}</td>
+                <td><span class="dept-pill">{{ student.department.name|truncatechars:20 }}</span></td>
+                <td>{{ student.start_date|date:"d M Y" }}</td>
+                <td>{{ student.end_date|date:"d M Y" }}</td>
+                <td style="text-align:center">{{ student.attachment_duration|default:"—" }} days</td>
+                <td style="text-align:center">
+                    {% if student.days_remaining is None %}
+                        —
+                    {% elif student.days_remaining <= 0 %}
+                        <span style="color:var(--red);font-weight:700">Ended</span>
+                    {% elif student.days_remaining <= 14 %}
+                        <span style="color:var(--amber);font-weight:700">{{ student.days_remaining }} days</span>
+                    {% else %}
+                        {{ student.days_remaining }} days
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="status-badge 
+                        {% if student.status == 'active' %}badge-active
+                        {% elif student.status == 'completed' %}badge-completed
+                        {% elif student.status == 'on_hold' %}badge-onhold
+                        {% else %}badge-withdrawn{% endif %}">
+                        <span class="dot"></span>{{ student.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <div class="row-actions">
+                        <button class="btn btn-warning btn-xs" onclick="event.stopPropagation();openEdit('{{ student.id }}')">✏️</button>
+                        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();openDelete('{{ student.id }}')">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:24px">No students found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

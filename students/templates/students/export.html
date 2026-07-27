@@ -1,0 +1,100 @@
+<!-- templates/students/export.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FSA AttachTrack — Export Data{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Export Data</h2>
+    <p>Download your data in different formats</p>
+</div>
+
+<div class="export-panel">
+    <h3>Choose export format</h3>
+    <div class="export-options">
+        <div class="export-card" onclick="window.location.href='{% url 'students:export_data' %}?format=csv&all=true'">
+            <div class="ex-icon">📄</div>
+            <div class="ex-label">CSV — All Records</div>
+            <div class="ex-sub">All fields, all attachees</div>
+        </div>
+        <div class="export-card" onclick="window.location.href='{% url 'students:export_data' %}?format=csv&filtered=true&{{ request.GET.urlencode }}'">
+            <div class="ex-icon">🔍</div>
+            <div class="ex-label">CSV — Filtered</div>
+            <div class="ex-sub">Current Register filters</div>
+        </div>
+        <div class="export-card" onclick="window.location.href='{% url 'students:export_data' %}?format=csv&status=active'">
+            <div class="ex-icon">✅</div>
+            <div class="ex-label">CSV — Active Only</div>
+            <div class="ex-sub">Only currently active</div>
+        </div>
+        <div class="export-card" onclick="window.location.href='{% url 'students:export_data' %}?format=json&all=true'">
+            <div class="ex-icon">🗂️</div>
+            <div class="ex-label">JSON</div>
+            <div class="ex-sub">For system import</div>
+        </div>
+        <div class="export-card" onclick="window.location.href='{% url 'students:export_data' %}?format=xlsx&all=true'">
+            <div class="ex-icon">📊</div>
+            <div class="ex-label">XLSX</div>
+            <div class="ex-sub">Spreadsheet format</div>
+        </div>
+        <div class="export-card" onclick="window.print()">
+            <div class="ex-icon">🖨️</div>
+            <div class="ex-label">Print / PDF</div>
+            <div class="ex-sub">Print-ready layout</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📋 Export Preview (All Records)</div>
+    <div class="table-wrap" style="border:none;border-radius:0">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Student ID</th>
+                    <th>Full Name</th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Course</th>
+                    <th>Year</th>
+                    <th>Department</th>
+                    <th>Supervisor</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td class="id-cell">{{ student.student_id }}</td>
+                    <td class="name-cell">{{ student.name }}</td>
+                    <td>{{ student.contact|default:"—" }}</td>
+                    <td>{{ student.email|default:"—" }}</td>
+                    <td>{{ student.course.name|default:"—"|truncatechars:30 }}</td>
+                    <td>{{ student.year_of_study|default:"—" }}</td>
+                    <td><span class="dept-pill">{{ student.department.name|truncatechars:20 }}</span></td>
+                    <td>{{ student.supervisor.name|default:"—" }}</td>
+                    <td>{{ student.start_date|date:"d M Y" }}</td>
+                    <td>{{ student.end_date|date:"d M Y" }}</td>
+                    <td>
+                        <span class="status-badge 
+                            {% if student.status == 'active' %}badge-active
+                            {% elif student.status == 'completed' %}badge-completed
+                            {% elif student.status == 'on_hold' %}badge-onhold
+                            {% else %}badge-withdrawn{% endif %}">
+                            <span class="dot"></span>{{ student.get_status_display }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:24px">No records available</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,312 @@
+<!-- templates/students/detail.html -->
+{% extends 'base.html' %} {% load static %} {% block title %}FSA AttachTrack —
+{{ student.name }}{% endblock %} {% block content %}
+<div class="page-header">
+  <h2>{{ student.name }}</h2>
+  <p>Student ID: {{ student.student_id }}</p>
+</div>
+
+<div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px">
+  <span
+    class="status-badge {% if student.status == 'active' %}badge-active {% elif student.status == 'completed' %}badge-completed {% elif student.status == 'on_hold' %}badge-onhold {% else %}badge-withdrawn{% endif %}"
+    style="font-size: 14px; padding: 6px 16px"
+  >
+    <span class="dot"></span>{{ student.get_status_display }}
+  </span>
+</div>
+
+<!-- Personal Information -->
+<div class="detail-section">
+  <div class="detail-section-title">Personal Information</div>
+  <div class="detail-grid">
+    <div class="detail-item">
+      <label>Full Name</label>
+      <span>{{ student.name }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Student ID</label>
+      <span>{{ student.student_id }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Contact</label>
+      <span>{{ student.contact|default:"—" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Email</label>
+      <span>{{ student.email|default:"—" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Emergency Contact</label>
+      <span>{{ student.emergency_contact|default:"—" }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Academic Details -->
+<div class="detail-section">
+  <div class="detail-section-title">Academic Details</div>
+  <div class="detail-grid">
+    <div class="detail-item">
+      <label>Course</label>
+      <span>{{ student.course.name|default:"—" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Year of Study</label>
+      <span>{{ student.year_of_study|default:"—" }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Attachment Details -->
+<div class="detail-section">
+  <div class="detail-section-title">Attachment Details</div>
+  <div class="detail-grid">
+    <div class="detail-item">
+      <label>Department</label>
+      <span>{{ student.department.name }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Supervisor</label>
+      <span>{{ student.supervisor.name|default:"—" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Supervisor Contact</label>
+      <span>{{ student.supervisor.phone|default:"—" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Start Date</label>
+      <span>{{ student.start_date|date:"d M Y" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>End Date</label>
+      <span>{{ student.end_date|date:"d M Y" }}</span>
+    </div>
+    <div class="detail-item">
+      <label>Duration</label>
+      <span>{{ student.attachment_duration|default:"—" }} days</span>
+    </div>
+    <div class="detail-item">
+      <label>Days Remaining</label>
+      <span>
+        {% if student.days_remaining is not None %} {% if student.days_remaining
+        <= 0 %}
+        <span style="color: var(--red); font-weight: 700">Ended</span>
+        {% elif student.days_remaining <= 14 %}
+        <span style="color: var(--amber); font-weight: 700"
+          >{{ student.days_remaining }} days</span
+        >
+        {% else %} {{ student.days_remaining }} days {% endif %} {% else %} — {%
+        endif %}
+      </span>
+    </div>
+    <div class="detail-item">
+      <label>Days Elapsed</label>
+      <span>{{ student.days_elapsed|default:"—" }} days</span>
+    </div>
+  </div>
+</div>
+
+<!-- Documents Section -->
+<div class="detail-section">
+  <div class="detail-section-title">
+    Uploaded Documents
+    <a
+      href="{% url 'documents:upload' student.id %}"
+      class="btn btn-primary btn-xs"
+      style="float: right; margin-top: -3px"
+    >
+      📤 Upload Document
+    </a>
+  </div>
+
+  <div class="detail-grid">
+    {% for doc in documents %}
+    <div class="detail-item">
+      <label>{{ doc.get_document_type_display }}</label>
+      <span>
+        <a
+          href="{{ doc.file.url }}"
+          target="_blank"
+          style="color: var(--purple-main)"
+        >
+          📄 {{ doc.filename }}
+        </a>
+        <br />
+        <small style="color: var(--text-muted); font-size: 10px">
+          Uploaded: {{ doc.uploaded_at|date:"d M Y H:i" }}
+          <button
+            class="btn btn-danger btn-xs"
+            onclick="deleteDocument('{{ doc.id }}')"
+            style="margin-left: 8px"
+          >
+            🗑️
+          </button>
+        </small>
+      </span>
+    </div>
+    {% empty %}
+    <div class="detail-item" style="grid-column: 1/-1">
+      <span style="color: var(--text-muted)">No documents uploaded yet</span>
+      <br />
+      <a
+        href="{% url 'documents:upload' student.id %}"
+        style="color: var(--purple-main); font-size: 13px"
+      >
+        Upload your first document →
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Monthly Reports Section -->
+<div class="detail-section">
+  <div class="detail-section-title">
+    Monthly Reports
+    <a
+      href="{% url 'reports:create' student.id %}"
+      class="btn btn-primary btn-xs"
+      style="float: right; margin-top: -3px"
+    >
+      ➕ Add Report
+    </a>
+  </div>
+
+  {% if reports %}
+  <table class="mini-table">
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Activities</th>
+        <th>Accomplishments</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for report in reports|slice:":5" %}
+      <tr>
+        <td><strong>{{ report.month|date:"F Y" }}</strong></td>
+        <td>{{ report.activities|truncatechars:50 }}</td>
+        <td>{{ report.accomplishments|truncatechars:50 }}</td>
+        <td>
+          <span class="status-badge badge-active">
+            <span class="dot"></span>Submitted
+          </span>
+        </td>
+        <td>
+          <div class="row-actions">
+            <a
+              href="{% url 'reports:edit' report.id %}"
+              class="btn btn-warning btn-xs"
+              >✏️</a
+            >
+            <a
+              href="{% url 'reports:list' student.id %}"
+              class="btn btn-info btn-xs"
+              >📋</a
+            >
+          </div>
+        </td>
+      </tr>
+      {% endfor %} {% if reports.count > 5 %}
+      <tr>
+        <td colspan="5" style="text-align: center">
+          <a
+            href="{% url 'reports:list' student.id %}"
+            class="btn btn-ghost btn-sm"
+          >
+            View all {{ reports.count }} reports →
+          </a>
+        </td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color: var(--text-muted); font-size: 13px">
+    No monthly reports submitted yet.
+    <a
+      href="{% url 'reports:create' student.id %}"
+      style="color: var(--purple-main)"
+      >Submit your first report</a
+    >
+  </p>
+  {% endif %}
+</div>
+
+<!-- Notes Section -->
+{% if student.notes %}
+<div class="detail-section">
+  <div class="detail-section-title">Notes</div>
+  <p style="font-size: 13px">{{ student.notes }}</p>
+</div>
+{% endif %}
+
+<!-- Actions -->
+<div class="detail-actions">
+  <button class="btn btn-warning" onclick="openEdit('{{ student.id }}')">
+    ✏️ Edit Record
+  </button>
+  <button class="btn btn-danger" onclick="openDelete('{{ student.id }}')">
+    🗑️ Delete Record
+  </button>
+  <a
+    href="{% url 'students:register' %}"
+    class="btn btn-ghost"
+    style="margin-left: auto"
+    >← Back to Intern Register</a
+  >
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  // Document deletion function
+  function deleteDocument(documentId) {
+    if (confirm("Are you sure you want to delete this document?")) {
+      fetch(`/documents/delete/${documentId}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCSRFToken(),
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            showAlert("✅ Document deleted successfully", "success");
+            setTimeout(() => window.location.reload(), 500);
+          } else {
+            showAlert("⚠️ Error deleting document", "error");
+          }
+        })
+        .catch((error) => {
+          showAlert("⚠️ Network error. Please try again.", "error");
+        });
+    }
+  }
+
+  // Helper function to get CSRF token
+  function getCSRFToken() {
+    return (
+      document.querySelector("[name=csrfmiddlewaretoken]")?.value ||
+      document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("csrftoken="))
+        ?.split("=")[1] ||
+      ""
+    );
+  }
+
+  // Helper function to show alerts
+  function showAlert(message, type = "info") {
+    const el = document.getElementById("alert-box");
+    el.className = `alert alert-${type} show`;
+    el.textContent = message;
+
+    clearTimeout(el._timeout);
+    el._timeout = setTimeout(() => {
+      el.classList.remove("show");
+    }, 3200);
+  }
+</script>
+{% endblock %}

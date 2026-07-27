@@ -1,0 +1,78 @@
+<!-- templates/includes/_sidebar.html -->
+{% load static %}
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">FSA Kenya</div>
+    <h1>Attach<br />Track</h1>
+    <p>Attachee Management System</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a
+      href="{% url 'dashboard:index' %}"
+      class="nav-item {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}"
+    >
+      <span class="icon">📊</span> Dashboard
+    </a>
+
+    <div class="nav-section-label">Views</div>
+    <a
+      href="{% url 'students:by_dept' %}"
+      class="nav-item {% if request.resolver_match.url_name == 'by_dept' %}active{% endif %}"
+    >
+      <span class="icon">🏢</span> By Department
+    </a>
+    <a
+      href="{% url 'departments:list' %}"
+      class="nav-item {% if request.resolver_match.app_name == 'departments' and request.resolver_match.url_name == 'list' %}active{% endif %}"
+    >
+      <span class="icon">🏛️</span> Departments
+    </a>
+    <a
+      href="{% url 'students:timeline' %}"
+      class="nav-item {% if request.resolver_match.url_name == 'timeline' %}active{% endif %}"
+    >
+      <span class="icon">📅</span> Timeline / Status
+    </a>
+    <a
+      href="{% url 'students:supervisors' %}"
+      class="nav-item {% if request.resolver_match.url_name == 'supervisors' %}active{% endif %}"
+    >
+      <span class="icon">👤</span> Supervisors
+    </a>
+
+    <div class="nav-section-label">Actions</div>
+    <a
+      href="#"
+      class="nav-item"
+      onclick="
+        openAddModal('attachee');
+        return false;
+      "
+    >
+      <span class="icon">➕</span> Add Attachee
+    </a>
+    {% if user.role != 'intern' %}
+    <a
+      href="#"
+      class="nav-item"
+      onclick="
+        openAddModal('intern');
+        return false;
+      "
+    >
+      <span class="icon">➕</span> Add Intern
+    </a>
+    {% endif %}
+    <a
+      href="{% url 'students:export' %}"
+      class="nav-item {% if request.resolver_match.url_name == 'export' %}active{% endif %}"
+    >
+      <span class="icon">📤</span> Export Data
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    FSA AttachTrack v2.0<br />
+    Foreign Service Academy Kenya
+  </div>
+</aside>

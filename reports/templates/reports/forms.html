@@ -1,0 +1,70 @@
+<!-- templates/reports/form.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FSA AttachTrack — {% if report %}Edit{% else %}Add{% endif %} Report{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>{% if report %}Edit{% else %}Add{% endif %} Monthly Report</h2>
+    <p>{{ report.student.name|default:"" }}</p>
+</div>
+
+<div class="card">
+    <div style="padding:24px;">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Month *</label>
+                    {{ form.month }}
+                    {% if form.month.errors %}
+                    <div style="color:var(--red);font-size:11px;">{{ form.month.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group full">
+                    <label>Activities *</label>
+                    {{ form.activities }}
+                    {% if form.activities.errors %}
+                    <div style="color:var(--red);font-size:11px;">{{ form.activities.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group full">
+                    <label>Accomplishments *</label>
+                    {{ form.accomplishments }}
+                    {% if form.accomplishments.errors %}
+                    <div style="color:var(--red);font-size:11px;">{{ form.accomplishments.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group full">
+                    <label>Challenges</label>
+                    {{ form.challenges }}
+                </div>
+                
+                <div class="form-group full">
+                    <label>Lessons Learnt</label>
+                    {{ form.lessons_learnt }}
+                </div>
+                
+                <div class="form-group full">
+                    <label>Supervisor Remarks</label>
+                    {{ form.supervisor_remarks }}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{% if report %}{% url 'reports:list' report.student.id %}{% else %}{% url 'students:detail' student.id %}{% endif %}" class="btn btn-ghost">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    {% if report %}💾 Save Changes{% else %}➕ Add Report{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

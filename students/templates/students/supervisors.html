@@ -1,0 +1,60 @@
+<!-- templates/students/supervisors.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FSA AttachTrack — Supervisors{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Supervisor Directory</h2>
+    <p>All supervisors and their assigned attachees</p>
+</div>
+
+<div class="table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Supervisor</th>
+                <th>Contact</th>
+                <th>Attachee Name</th>
+                <th>Student ID</th>
+                <th>Department</th>
+                <th>Period</th>
+                <th style="text-align:center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for supervisor in supervisors %}
+                {% for student in supervisor.students.all %}
+                <tr onclick="window.location.href='{% url 'students:detail' student.id %}'">
+                    <td>{{ forloop.parentloop.counter }}{% if not forloop.first %}.{{ forloop.counter }}{% endif %}</td>
+                    <td><strong>{{ supervisor.name }}</strong></td>
+                    <td>{{ supervisor.phone|default:"—" }}</td>
+                    <td>{{ student.name }}</td>
+                    <td class="id-cell">{{ student.student_id }}</td>
+                    <td><span class="dept-pill">{{ student.department.name|truncatechars:22 }}</span></td>
+                    <td>{{ student.start_date|date:"d M Y" }} – {{ student.end_date|date:"d M Y" }}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="btn btn-warning btn-xs" onclick="event.stopPropagation();openEdit('{{ student.id }}')">✏️</button>
+                            <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();openDelete('{{ student.id }}')">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><strong>{{ supervisor.name }}</strong></td>
+                    <td>{{ supervisor.phone|default:"—" }}</td>
+                    <td colspan="5" style="color:var(--text-muted);text-align:center;">No assigned attachees</td>
+                    <td>—</td>
+                </tr>
+                {% endfor %}
+            {% empty %}
+            <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px">No supervisors found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

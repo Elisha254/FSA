@@ -1,0 +1,75 @@
+<!-- templates/students/by_dept.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FSA AttachTrack — By Department{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>By Department</h2>
+    <p>Attachees grouped by host department</p>
+</div>
+
+{% for dept in departments %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+        🏢 {{ dept.name }}
+        <span style="background:rgba(255,255,255,.2);padding:2px 8px;border-radius:12px;font-size:11px">
+            {{ dept.students.count }} attachee{{ dept.students.count|pluralize }}
+        </span>
+    </div>
+    <table class="mini-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Course</th>
+                <th>Yr</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Supervisor</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in dept.students.all %}
+            <tr onclick="window.location.href='{% url 'students:detail' student.id %}'">
+                <td>{{ forloop.counter }}</td>
+                <td><strong>{{ student.name }}</strong></td>
+                <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ student.course.name|default:"—" }}</td>
+                <td style="text-align:center">{{ student.year_of_study|default:"—" }}</td>
+                <td>{{ student.start_date|date:"d M Y" }}</td>
+                <td>{{ student.end_date|date:"d M Y" }}</td>
+                <td>{{ student.supervisor.name|default:"—" }}</td>
+                <td>
+                    <span class="status-badge 
+                        {% if student.status == 'active' %}badge-active
+                        {% elif student.status == 'completed' %}badge-completed
+                        {% elif student.status == 'on_hold' %}badge-onhold
+                        {% else %}badge-withdrawn{% endif %}">
+                        <span class="dot"></span>{{ student.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <div class="row-actions">
+                        <button class="btn btn-warning btn-xs" onclick="event.stopPropagation();openEdit('{{ student.id }}')">✏️</button>
+                        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();openDelete('{{ student.id }}')">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:24px">No students in this department</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% empty %}
+<div class="card">
+    <div class="card-header">No Departments</div>
+    <div style="padding:24px;text-align:center;color:var(--text-muted);">
+        No departments have been created yet.
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

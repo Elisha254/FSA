@@ -1,0 +1,45 @@
+<!-- templates/includes/_topbar.html -->
+<div class="topbar">
+  <span class="topbar-title" id="topbar-title"
+    >{% block topbar_title %}Dashboard Overview{% endblock %}</span
+  >
+  <div class="topbar-right">
+    <span
+      style="font-size: 11px; color: var(--text-muted)"
+      id="topbar-date"
+    ></span>
+    <span class="topbar-user"
+      >{{ user.username }} ({{ user.role|capfirst }})</span
+    >
+    <form
+      id="logout-form"
+      action="{% url 'accounts:logout' %}"
+      method="post"
+      class="logout-form"
+    >
+      {% csrf_token %}
+      <button
+        type="submit"
+        class="btn btn-ghost btn-sm"
+        onclick="document.getElementById('logout-form').submit()"
+      >
+        Logout
+      </button>
+    </form>
+
+    <a href="{% url 'students:export' %}" class="btn btn-ghost btn-sm"
+      >📤 Export</a
+    >
+    {% if user.role != 'intern' %}
+    <a
+      href="#"
+      class="btn btn-primary btn-sm"
+      onclick="
+        openAddModal('attachee');
+        return false;
+      "
+      >➕ Add Attachee</a
+    >
+    {% endif %}
+  </div>
+</div>

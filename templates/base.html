@@ -1,0 +1,59 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FSA AttachTrack — Attachee Database{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Static Files -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/fsa_style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+    <div class="layout">
+        <!-- Sidebar -->
+        {% include 'sidebar.html' %}
+        
+        <!-- Main Content -->
+        <div class="main">
+            <!-- Topbar -->
+            {% include 'topbar.html' %}
+            
+            <!-- Content Area -->
+            <div class="content">
+{% else %}
+    <div class="guest-layout">
+        <div class="guest-content">
+{% endif %}
+            {% block content %}{% endblock %}
+{% if user.is_authenticated %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="modals-container">
+        {% include 'modals.html' %}
+    </div>
+{% else %}
+        </div>
+    </div>
+{% endif %}
+    
+    <!-- Alert -->
+    <div class="alert" id="alert-box"></div>
+    
+    <!-- Static JS -->
+    <script src="{% static 'css/js/fsa_main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

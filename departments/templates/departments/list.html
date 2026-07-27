@@ -1,0 +1,211 @@
+{% extends 'base.html' %} {% load static %} {% block title %}FSA AttachTrack —
+Departments{% endblock %} {% block content %}
+<div class="page-header">
+  <h2>Department & Supervisor Management</h2>
+  <p>Manage departments and supervisors with add, edit, and delete actions.</p>
+</div>
+
+<div class="grid-2-up gap-24">
+  <div class="card">
+    <div class="card-header">
+      <h3>Department Form</h3>
+    </div>
+    <div class="card-body">
+      <input type="hidden" id="dept-id" />
+      <div class="form-group">
+        <label>Department Name *</label>
+        <input id="dept-name" type="text" placeholder="e.g. Human Resources" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea
+          id="dept-description"
+          rows="4"
+          placeholder="Optional department description"
+        ></textarea>
+      </div>
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          onclick="submitDepartmentForm()"
+          id="dept-save-btn"
+        >
+          Add Department
+        </button>
+        <button
+          class="btn btn-ghost"
+          onclick="cancelDepartmentEdit()"
+          id="dept-cancel-btn"
+          style="display: none"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Supervisor Form</h3>
+    </div>
+    <div class="card-body">
+      <input type="hidden" id="supervisor-id" />
+      <div class="form-group">
+        <label>Supervisor Name *</label>
+        <input
+          id="supervisor-name"
+          type="text"
+          placeholder="e.g. Jane Wanjiru"
+        />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input
+          id="supervisor-email"
+          type="email"
+          placeholder="email@example.com"
+        />
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input id="supervisor-phone" type="text" placeholder="+254..." />
+      </div>
+      <div class="form-group">
+        <label>Department *</label>
+        <select id="supervisor-department">
+          <option value="">Select department…</option>
+          {% for dept in departments %}
+          <option value="{{ dept.id }}">{{ dept.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group checkbox-group">
+        <label>
+          <input id="supervisor-active" type="checkbox" checked /> Active
+        </label>
+      </div>
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          onclick="submitSupervisorForm()"
+          id="supervisor-save-btn"
+        >
+          Add Supervisor
+        </button>
+        <button
+          class="btn btn-ghost"
+          onclick="cancelSupervisorEdit()"
+          id="supervisor-cancel-btn"
+          style="display: none"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="table-wrap" style="margin-top: 32px">
+  <h3>Departments</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Supervisors</th>
+        <th>Attachees</th>
+        <th style="text-align: center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dept in departments %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ dept.name }}</td>
+        <td>{{ dept.description|default:'—' }}</td>
+        <td>{{ dept.supervisor_count }}</td>
+        <td>{{ dept.student_count }}</td>
+        <td>
+          <div class="row-actions">
+            <button
+              class="btn btn-warning btn-xs"
+              onclick="openDepartmentEdit('{{ dept.id }}', '{{ dept.name|escapejs }}', '{{ dept.description|default:''|escapejs }}')"
+            >
+              ✏️
+            </button>
+            <button
+              class="btn btn-danger btn-xs"
+              onclick="deleteDepartment('{{ dept.id }}')"
+            >
+              🗑️
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td
+          colspan="6"
+          style="text-align: center; color: var(--text-muted); padding: 24px"
+        >
+          No departments found.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="table-wrap" style="margin-top: 32px">
+  <h3>Supervisors</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Department</th>
+        <th>Contact</th>
+        <th>Status</th>
+        <th style="text-align: center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for supervisor in supervisors %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ supervisor.name }}</td>
+        <td>{{ supervisor.department.name }}</td>
+        <td>{{ supervisor.phone|default:'—' }}</td>
+        <td>{{ supervisor.is_active|yesno:'Active,Inactive' }}</td>
+        <td>
+          <div class="row-actions">
+            <button
+              class="btn btn-warning btn-xs"
+              onclick="openSupervisorEdit('{{ supervisor.id }}', '{{ supervisor.name|escapejs }}', '{{ supervisor.email|default:''|escapejs }}', '{{ supervisor.phone|default:''|escapejs }}', '{{ supervisor.department.id }}', {{ supervisor.is_active|yesno:'true,false' }})"
+            >
+              ✏️
+            </button>
+            <button
+              class="btn btn-danger btn-xs"
+              onclick="deleteSupervisor('{{ supervisor.id }}')"
+            >
+              🗑️
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td
+          colspan="6"
+          style="text-align: center; color: var(--text-muted); padding: 24px"
+        >
+          No supervisors found.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

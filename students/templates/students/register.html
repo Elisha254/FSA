@@ -1,0 +1,223 @@
+<!-- templates/students/register.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FSA AttachTrack — Attachee Register{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Attachee Register</h2>
+    <p>Complete master list — click a row to view, use buttons to edit or delete</p>
+    <div class="stat-row">
+        <span class="stat-chip">Showing {{ students.count }} of {{ students.count }} records</span>
+    </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+    <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="search-input" placeholder="Search name, ID, course, supervisor, email…" 
+               value="{{ filter_data.search }}" oninput="applyFilters()">
+    </div>
+    
+    <select class="filter-select" id="filter-dept" onchange="applyFilters()">
+        <option value="">All Departments</option>
+        {% for dept in departments %}
+        <option value="{{ dept.id }}" {% if filter_data.dept == dept.id|stringformat:"s" %}selected{% endif %}>
+            {{ dept.name }}
+        </option>
+        {% endfor %}
+    </select>
+    
+    <select class="filter-select" id="filter-status" onchange="applyFilters()">
+        <option value="">All Statuses</option>
+        <option value="active" {% if filter_data.status == 'active' %}selected{% endif %}>Active</option>
+        <option value="completed" {% if filter_data.status == 'completed' %}selected{% endif %}>Completed</option>
+        <option value="on_hold" {% if filter_data.status == 'on_hold' %}selected{% endif %}>On Hold</option>
+        <option value="withdrawn" {% if filter_data.status == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+    </select>
+    
+    <button class="btn btn-ghost btn-sm" onclick="toggleAdvFilters()">⚙️ Advanced Filters</button>
+    <button class="btn btn-success btn-sm" onclick="exportFilteredCSV()">📥 Export CSV</button>
+</div>
+
+<!-- Advanced Filters -->
+<div class="adv-filters" id="adv-filters">
+    <div class="adv-filters-grid">
+        <div>
+            <label>Year of Study</label>
+            <select id="af-year" onchange="applyFilters()">
+                <option value="">Any Year</option>
+                {% for year in "1234567"|make_list %}
+                <option value="{{ year }}" {% if filter_data.year == year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Supervisor</label>
+            <select id="af-supervisor" onchange="applyFilters()">
+                <option value="">Any Supervisor</option>
+                {% for sup in supervisors %}
+                <option value="{{ sup.id }}" {% if filter_data.supervisor == sup.id|stringformat:"s" %}selected{% endif %}>
+                    {{ sup.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Start Date From</label>
+            <input type="date" id="af-start-from" value="{{ filter_data.start_from }}" onchange="applyFilters()">
+        </div>
+        <div>
+            <label>Start Date To</label>
+            <input type="date" id="af-start-to" value="{{ filter_data.start_to }}" onchange="applyFilters()">
+        </div>
+        <div>
+            <label>End Date From</label>
+            <input type="date" id="af-end-from" value="{{ filter_data.end_from }}" onchange="applyFilters()">
+        </div>
+        <div>
+            <label>End Date To</label>
+            <input type="date" id="af-end-to" value="{{ filter_data.end_to }}" onchange="applyFilters()">
+        </div>
+        <div>
+            <label>Sort By</label>
+            <select id="af-sort" onchange="applyFilters()">
+                <option value="name" {% if filter_data.sort == 'name' %}selected{% endif %}>Name (A–Z)</option>
+                <option value="name-desc" {% if filter_data.sort == 'name-desc' %}selected{% endif %}>Name (Z–A)</option>
+                <option value="start" {% if filter_data.sort == 'start' %}selected{% endif %}>Start Date (Earliest)</option>
+                <option value="start-desc" {% if filter_data.sort == 'start-desc' %}selected{% endif %}>Start Date (Latest)</option>
+                <option value="end" {% if filter_data.sort == 'end' %}selected{% endif %}>End Date (Earliest)</option>
+                <option value="end-desc" {% if filter_data.sort == 'end-desc' %}selected{% endif %}>End Date (Latest)</option>
+            </select>
+        </div>
+        <div>
+            <label>Course Contains</label>
+            <input type="text" id="af-course" placeholder="e.g. Relations" value="{{ filter_data.course }}" oninput="applyFilters()">
+        </div>
+    </div>
+    <div class="filter-actions">
+        <button class="btn btn-ghost btn-sm" onclick="clearAdvFilters()">✕ Clear All Filters</button>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Student ID</th>
+                <th>Full Name</th>
+                <th>Contact</th>
+                <th>Course</th>
+                <th>Yr</th>
+                <th>Department</th>
+                <th>Supervisor</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+                <th style="text-align:center">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="register-tbody">
+            {% for student in students %}
+            <tr onclick="showDetail('{{ student.id }}')">
+                <td>{{ forloop.counter }}</td>
+                <td class="id-cell">{{ student.student_id }}</td>
+                <td class="name-cell">{{ student.name }}</td>
+                <td>{{ student.contact|default:"—" }}</td>
+                <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ student.course.name|default:'' }}">
+                    {{ student.course.name|default:"—"|truncatechars:30 }}
+                </td>
+                <td style="text-align:center">{{ student.year_of_study|default:"—" }}</td>
+                <td><span class="dept-pill">{{ student.department.name|truncatechars:22 }}</span></td>
+                <td>{{ student.supervisor.name|default:"—" }}</td>
+                <td>{{ student.start_date|date:"d M Y" }}</td>
+                <td>{{ student.end_date|date:"d M Y" }}</td>
+                <td>
+                    <span class="status-badge 
+                        {% if student.status == 'active' %}badge-active
+                        {% elif student.status == 'completed' %}badge-completed
+                        {% elif student.status == 'on_hold' %}badge-onhold
+                        {% else %}badge-withdrawn{% endif %}">
+                        <span class="dot"></span>{{ student.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <div class="row-actions">
+                        <button class="btn btn-warning btn-xs" onclick="event.stopPropagation();openEdit('{{ student.id }}')">✏️</button>
+                        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();openDelete('{{ student.id }}')">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:24px">No matching records</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function applyFilters() {
+    const params = new URLSearchParams();
+    
+    const search = document.getElementById('search-input').value;
+    if (search) params.append('search', search);
+    
+    const dept = document.getElementById('filter-dept').value;
+    if (dept) params.append('dept', dept);
+    
+    const status = document.getElementById('filter-status').value;
+    if (status) params.append('status', status);
+    
+    const year = document.getElementById('af-year').value;
+    if (year) params.append('year', year);
+    
+    const supervisor = document.getElementById('af-supervisor').value;
+    if (supervisor) params.append('supervisor', supervisor);
+    
+    const startFrom = document.getElementById('af-start-from').value;
+    if (startFrom) params.append('start_from', startFrom);
+    
+    const startTo = document.getElementById('af-start-to').value;
+    if (startTo) params.append('start_to', startTo);
+    
+    const endFrom = document.getElementById('af-end-from').value;
+    if (endFrom) params.append('end_from', endFrom);
+    
+    const endTo = document.getElementById('af-end-to').value;
+    if (endTo) params.append('end_to', endTo);
+    
+    const course = document.getElementById('af-course').value;
+    if (course) params.append('course', course);
+    
+    const sort = document.getElementById('af-sort').value;
+    if (sort) params.append('sort', sort);
+    
+    window.location.href = '?' + params.toString();
+}
+
+function clearAdvFilters() {
+    document.getElementById('af-year').value = '';
+    document.getElementById('af-supervisor').value = '';
+    document.getElementById('af-start-from').value = '';
+    document.getElementById('af-start-to').value = '';
+    document.getElementById('af-end-from').value = '';
+    document.getElementById('af-end-to').value = '';
+    document.getElementById('af-course').value = '';
+    document.getElementById('af-sort').value = 'name';
+    document.getElementById('search-input').value = '';
+    document.getElementById('filter-dept').value = '';
+    document.getElementById('filter-status').value = '';
+    applyFilters();
+}
+
+function toggleAdvFilters() {
+    document.getElementById('adv-filters').classList.toggle('open');
+}
+</script>
+{% endblock %}

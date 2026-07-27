@@ -1,0 +1,92 @@
+<!-- templates/reports/list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FSA AttachTrack — Reports for {{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Monthly Reports</h2>
+    <p>{{ student.name }} ({{ student.student_id }})</p>
+</div>
+
+<div class="controls">
+    <a href="{% url 'reports:create' student.id %}" class="btn btn-primary">
+        ➕ Add Monthly Report
+    </a>
+    <a href="{% url 'students:detail' student.id %}" class="btn btn-ghost">
+        ← Back to Profile
+    </a>
+</div>
+
+{% if reports %}
+<div class="table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Activities</th>
+                <th>Accomplishments</th>
+                <th>Challenges</th>
+                <th>Lessons Learnt</th>
+                <th>Supervisor Remarks</th>
+                <th>Submitted</th>
+                <th style="text-align:center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td><strong>{{ report.month|date:"F Y" }}</strong></td>
+                <td>{{ report.activities|truncatechars:50 }}</td>
+                <td>{{ report.accomplishments|truncatechars:50 }}</td>
+                <td>{{ report.challenges|truncatechars:50|default:"—" }}</td>
+                <td>{{ report.lessons_learnt|truncatechars:50|default:"—" }}</td>
+                <td>{{ report.supervisor_remarks|default:"—"|truncatechars:50 }}</td>
+                <td><small>{{ report.submitted_at|date:"d M Y H:i" }}</small></td>
+                <td>
+                    <div class="row-actions">
+                        <a href="{% url 'reports:edit' report.id %}" class="btn btn-warning btn-xs">✏️</a>
+                        <button class="btn btn-danger btn-xs" onclick="deleteReport('{{ report.id }}')">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <div style="padding:40px;text-align:center;color:var(--text-muted);">
+        <p style="font-size:18px;margin-bottom:10px;">📝 No reports submitted yet</p>
+        <p>Click the "Add Monthly Report" button to submit your first report.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteReport(reportId) {
+    if (confirm('Are you sure you want to delete this report?')) {
+        fetch(`/reports/delete/${reportId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('✅ Report deleted successfully', 'success');
+                setTimeout(() => window.location.reload(), 500);
+            }
+        })
+        .catch(error => {
+            showAlert('⚠️ Error deleting report', 'error');
+        });
+    }
+}
+</script>
+{% endblock %}

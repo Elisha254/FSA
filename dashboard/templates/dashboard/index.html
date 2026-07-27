@@ -1,0 +1,388 @@
+<!-- templates/dashboard/index.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FSA AttachTrack — Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Dashboard Overview</h2>
+    <p>All attachee statistics at a glance</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card purple">
+        <div class="kpi-label">Total Attachees</div>
+        <div class="kpi-value">{{ total_students }}</div>
+        <div class="kpi-sub">In the system</div>
+    </div>
+    <div class="kpi-card green">
+        <div class="kpi-label">Active / Ongoing</div>
+        <div class="kpi-value">{{ active_students }}</div>
+        <div class="kpi-sub">Currently attached</div>
+    </div>
+    <div class="kpi-card gold">
+        <div class="kpi-label">Completed</div>
+        <div class="kpi-value">{{ completed_students }}</div>
+        <div class="kpi-sub">Attachment ended</div>
+    </div>
+    <div class="kpi-card navy">
+        <div class="kpi-label">Departments</div>
+        <div class="kpi-value">{{ total_departments }}</div>
+        <div class="kpi-sub">Host departments</div>
+    </div>
+    <div class="kpi-card purple">
+        <div class="kpi-label">Supervisors</div>
+        <div class="kpi-value">{{ total_supervisors }}</div>
+        <div class="kpi-sub">Active supervisors</div>
+    </div>
+    <div class="kpi-card green">
+        <div class="kpi-label">Reports Submitted</div>
+        <div class="kpi-value">{{ total_reports }}</div>
+        <div class="kpi-sub">Monthly reports</div>
+    </div>
+    <div class="kpi-card gold">
+        <div class="kpi-label">Documents Uploaded</div>
+        <div class="kpi-value">{{ total_documents }}</div>
+        <div class="kpi-sub">Total documents</div>
+    </div>
+    <div class="kpi-card navy">
+        <div class="kpi-label">Pending Documents</div>
+        <div class="kpi-value">{{ pending_documents }}</div>
+        <div class="kpi-sub">Missing uploads</div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="dash-grid">
+    <div class="card">
+        <div class="card-header">🏢 By Department</div>
+        <table class="mini-table">
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>Count</th>
+                    <th>Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dept in dept_stats %}
+                <tr>
+                    <td>{{ dept.name }}</td>
+                    <td><strong>{{ dept.student_count }}</strong></td>
+                    <td>
+                        <div class="bar-wrap">
+                            <div class="bar" style="width: {% widthratio dept.student_count total_students 80 %}px"></div>
+                            <span class="bar-label">{% widthratio dept.student_count total_students 100 %}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:24px">No data available</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">🎓 By Course</div>
+        <table class="mini-table">
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in course_stats %}
+                <tr>
+                    <td>{{ course.course__name|default:"Not Specified"|truncatechars:30 }}</td>
+                    <td><strong>{{ course.count }}</strong></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2" style="text-align:center;color:var(--text-muted);padding:24px">No data available</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- More Charts -->
+<div class="dash-grid" style="margin-top:20px;">
+    <div class="card">
+        <div class="card-header">📊 Monthly Intake (Last 12 Months)</div>
+        <div style="padding:20px;height:250px;">
+            <canvas id="intakeChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">📈 Monthly Completion</div>
+        <div style="padding:20px;height:250px;">
+            <canvas id="completionChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="dash-grid" style="margin-top:20px;">
+    <div class="card">
+        <div class="card-header">👤 Supervisor Workload</div>
+        <div style="padding:20px;height:250px;">
+            <canvas id="supervisorChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">📄 Document Completion Status</div>
+        <div style="padding:20px;height:250px;">
+            <canvas id="documentChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="dash-grid" style="margin-top:20px;">
+    <div class="card">
+        <div class="card-header">📝 Monthly Report Submission</div>
+        <div style="padding:20px;height:250px;">
+            <canvas id="reportChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">📚 Lessons Learnt Submitted</div>
+        <div style="padding:20px;height:250px;">
+            <canvas id="lessonsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Entries -->
+<div class="card" style="margin-top:20px;">
+    <div class="card-header">📅 Recent Entries</div>
+    <table class="mini-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Student ID</th>
+                <th>Department</th>
+                <th>Start</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in recent_students %}
+            <tr onclick="window.location.href='{% url 'students:detail' student.id %}'">
+                <td><strong>{{ student.name }}</strong></td>
+                <td class="id-cell">{{ student.student_id }}</td>
+                <td><span class="dept-pill">{{ student.department.name|truncatechars:22 }}</span></td>
+                <td>{{ student.start_date|date:"d M Y" }}</td>
+                <td>
+                    <span class="status-badge 
+                        {% if student.status == 'active' %}badge-active
+                        {% elif student.status == 'completed' %}badge-completed
+                        {% elif student.status == 'on_hold' %}badge-onhold
+                        {% else %}badge-withdrawn{% endif %}">
+                        <span class="dot"></span>{{ student.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <div class="row-actions">
+                        <button class="btn btn-warning btn-xs" onclick="event.stopPropagation();openEdit('{{ student.id }}')">✏️</button>
+                        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();openDelete('{{ student.id }}')">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">No recent entries</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Monthly Intake Chart
+const intakeCtx = document.getElementById('intakeChart').getContext('2d');
+new Chart(intakeCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for item in monthly_intake %}'{{ item.month_name|date:"M Y" }}',{% endfor %}],
+        datasets: [{
+            label: 'Monthly Intake',
+            data: [{% for item in monthly_intake %}{{ item.count }},{% endfor %}],
+            backgroundColor: '#7B2FBE',
+            borderColor: '#5B1FA0',
+            borderWidth: 1,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: true }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+
+// Monthly Completion Chart
+const completionCtx = document.getElementById('completionChart').getContext('2d');
+new Chart(completionCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for item in monthly_completion %}'{{ item.month_name|date:"M Y" }}',{% endfor %}],
+        datasets: [{
+            label: 'Monthly Completion',
+            data: [{% for item in monthly_completion %}{{ item.count }},{% endfor %}],
+            borderColor: '#D4A017',
+            backgroundColor: 'rgba(212, 160, 23, 0.1)',
+            tension: 0.4,
+            fill: true,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: true }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+
+// Supervisor Workload Chart
+const supervisorCtx = document.getElementById('supervisorChart').getContext('2d');
+new Chart(supervisorCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for sup in supervisor_workload %}'{{ sup.name|truncatechars:20 }}',{% endfor %}],
+        datasets: [{
+            label: 'Students Assigned',
+            data: [{% for sup in supervisor_workload %}{{ sup.student_count }},{% endfor %}],
+            backgroundColor: '#0F1B35',
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+
+// Document Completion Status
+const documentCtx = document.getElementById('documentChart').getContext('2d');
+new Chart(documentCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Passport Photo', 'Student ID', 'University Letter', 'Acceptance Letter'],
+        datasets: [{
+            data: [
+                {{ document_status.passport }},
+                {{ document_status.student_id }},
+                {{ document_status.university_letter }},
+                {{ document_status.acceptance_letter }}
+            ],
+            backgroundColor: ['#7B2FBE', '#D4A017', '#16A34A', '#0F1B35'],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    usePointStyle: true,
+                    pointStyle: 'circle'
+                }
+            }
+        }
+    }
+});
+
+// Monthly Report Submission
+const reportCtx = document.getElementById('reportChart').getContext('2d');
+new Chart(reportCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for item in report_submission %}'{{ item.month_name|date:"M Y" }}',{% endfor %}],
+        datasets: [{
+            label: 'Reports Submitted',
+            data: [{% for item in report_submission %}{{ item.count }},{% endfor %}],
+            backgroundColor: '#16A34A',
+            borderColor: '#15803D',
+            borderWidth: 1,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: true }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+
+// Lessons Learnt Submitted
+const lessonsCtx = document.getElementById('lessonsChart').getContext('2d');
+new Chart(lessonsCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for item in lessons_submitted %}'{{ item.month_name|date:"M Y" }}',{% endfor %}],
+        datasets: [{
+            label: 'Lessons Learnt Submitted',
+            data: [{% for item in lessons_submitted %}{{ item.count }},{% endfor %}],
+            borderColor: '#D97706',
+            backgroundColor: 'rgba(217, 119, 6, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#D97706',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: true }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
